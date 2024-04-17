@@ -16,7 +16,7 @@
             <img
               :src="movie.poster"
               :alt="movie.title"
-              class="w-full aspect-[1/1.3]"
+              class="w-full aspect-[1/1.3] object-cover"
             />
           </div>
         </swiper-slide>

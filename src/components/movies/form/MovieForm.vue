@@ -8,76 +8,80 @@
       :validation-schema="schema"
       v-slot="{ errors }"
     >
-      <span> {{ errors }} </span>
-      <Field name="title" as="input">
-        <!-- <div class="mb-1">Movie title *</div>
+      <Field name="title" v-model="title" v-slot="{ field }">
+        <div class="mb-1">Movie title *</div>
         <InputText
           size="large"
           name="title"
-          v-bind="title"
-          v-model="title"
+          v-bind="field"
           placeholder="Movie title"
           class="w-full"
+          :invalid="!!errors?.title"
         />
-        <span>{{ errors[0] }}</span> -->
+        <small v-if="errors?.title" class="text-red-500 -mt-2">{{
+          errors?.title
+        }}</small>
       </Field>
-      <label>
+      <Field name="description" v-model="description" v-slot="{ field }">
         <div class="mb-1">Movie description</div>
         <Textarea
           size="large"
           name="description"
-          v-model="description"
+          v-bind="field"
           placeholder="Movie description"
           class="w-full !text-lg"
+          :invalid="!!errors?.description"
         />
-      </label>
+        <small v-if="errors?.description" class="text-red-500 -mt-2">{{
+          errors?.description
+        }}</small>
+      </Field>
 
       <div class="flex flex-col gap-3 md:flex-row">
-        <label class="flex-1">
-          <div class="mb-1">Movie Poster</div>
-          <InputText
-            size="large"
-            name="poster"
-            v-model="poster"
-            placeholder="Movie poster url"
-            class="w-full"
-          />
-        </label>
-        <label>
-          <div class="mb-1">Movie Year *</div>
-          <Calendar
-            size="large"
-            name="yearDate"
-            v-model="yearDate"
-            placeholder="Movie year"
-            view="year"
-            dateFormat="yy"
-            :maxDate="new Date()"
-            class="[&>input]:!text-lg [&>input]:py-2.5"
-          />
-        </label>
+        <div class="flex-1">
+          <Field name="poster" v-model="poster" v-slot="{ field }">
+            <div class="mb-1">Movie Poster</div>
+            <InputText
+              size="large"
+              name="poster"
+              v-bind="field"
+              placeholder="Movie poster url"
+              class="w-full"
+              :invalid="!!errors?.poster"
+            />
+            <small v-if="errors?.poster" class="text-red-500 block">{{
+              errors?.poster
+            }}</small>
+          </Field>
+        </div>
+        <div class="flex-grow-0">
+          <Field name="yearDate" v-model="yearDate" v-slot="{ field, errors }">
+            <div class="mb-1">Movie Year *</div>
+            <div>
+              <Calendar
+                size="large"
+                name="yearDate"
+                v-bind="field"
+                placeholder="Movie year"
+                view="year"
+                dateFormat="yy"
+                v-model="yearDate"
+                :maxDate="new Date()"
+                :invalid="!!errors.length"
+                class="[&>input]:!text-lg [&>input]:py-2.5"
+              />
+              <!-- :class="errors?.yearDate ? '[&>input]:!border-red-400 [&>input]:border' : ''" -->
+            </div>
+            <small
+              v-if="errors && errors.length"
+              class="text-red-500 max-w-[150px] block"
+              >{{ errors[0] }}</small
+            >
+          </Field>
+        </div>
       </div>
 
-      <div class="flex items-end gap-4">
-        <div class="flex-1">
-          <div class="mb-1">Movie Actors</div>
-          <MultiSelect
-            v-model="selectedActors"
-            :options="actors"
-            optionLabel="name"
-            optionValue="id"
-            display="chip"
-            placeholder="Select Movie Actors"
-            class="w-full !text-lg py-2"
-          />
-        </div>
-        <Button size="large" outlined>
-          <div class="flex items-center gap-2 text-lg">
-            <PhPlus :size="18" weight="bold" />
-            <span class="mb-0.5"> New Actor </span>
-          </div>
-        </Button>
-      </div>
+      <ActorSelector :defaultActors="selectedActors" @submit="handleAddActor" />
 
       <div class="mt-5">
         <Button
@@ -96,10 +100,9 @@ import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
 import Calendar from "primevue/calendar";
 import Button from "primevue/button";
-import MultiSelect from "primevue/multiselect";
-import { PhPlus } from "@phosphor-icons/vue";
 import { Form, Field } from "vee-validate";
 import * as Yup from "yup";
+import ActorSelector from "./ActorSelector.vue";
 
 export default {
   components: {
@@ -107,10 +110,9 @@ export default {
     Textarea,
     Calendar,
     Button,
-    MultiSelect,
-    PhPlus,
     Form,
     Field,
+    ActorSelector,
   },
   props: {
     type: {
@@ -124,6 +126,9 @@ export default {
   data() {
     const schema = Yup.object().shape({
       title: Yup.string().required("Title is required"),
+      description: Yup.string(),
+      poster: Yup.string().url("Invalid url"),
+      yearDate: Yup.date().required("Year is required"),
     });
 
     return {
@@ -143,7 +148,11 @@ export default {
       this.yearDate = new Date(this.movie.year);
 
       if (this.movie.actors) {
-        this.selectedActors = this.movie.actors.map((actor) => actor.actor_id);
+        this.selectedActors = this.movie.actors.map((m) => ({
+          actor_id: m.actor_id,
+          actor_role_id: m.actor_role_id,
+          join_date: m.join_date,
+        }));
       }
     }
   },
@@ -153,13 +162,16 @@ export default {
     },
   },
   methods: {
+    handleAddActor(data) {
+      this.selectedActors = data;
+    },
     validate: async function () {
       const result = await this.$refs.form.validate();
-      if (result.isValid) {
-        // do something here
-      }
+      return result.valid;
     },
-    handleSubmit() {
+    async handleSubmit() {
+      const isValid = await this.validate();
+      if (!isValid) return;
       const data = {
         title: this.title,
         description: this.description,
@@ -167,7 +179,7 @@ export default {
         year: this.yearDate.getFullYear(),
         actors: this.selectedActors,
       };
-      console.log("datadata", data);
+      this.$emit("submit", { data, id: this.movie?.id });
     },
   },
 };

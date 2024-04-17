@@ -5,6 +5,7 @@ import MovieView from '@/views/MovieView.vue'
 import MoviesRoute from '@/views/MoviesRoute.vue'
 import AddMovieView from '@/views/AddMovieView.vue'
 import UpdateMovieView from '@/views/UpdateMovieView.vue'
+import NotFound from '@/components/shared/NotFound.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,10 +38,15 @@ const router = createRouter({
           path: ':id/edit',
           name: 'editMovie',
           component: UpdateMovieView
-        }
+        },
 
       ]
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not',
+      component: NotFound
+    }
 
   ]
 })

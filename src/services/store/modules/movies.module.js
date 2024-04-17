@@ -6,6 +6,8 @@ export const MOVIE_LOCAL_DB_KEY = 'MOVIE_LOCAL_DB_KEY'
 export const ACTORS_LOCAL_DB_KEY = 'ACTORS_LOCAL_DB_KEY'
 export const ACTORS_RULES_LOCAL_DB_KEY = 'ACTORS_RULES_LOCAL_DB_KEY'
 
+const defaultImageUrl = 'https://hips.hearstapps.com/hmg-prod/images/time-travel-movies-1581634382.jpg'
+
 export const MoviesModule = {
   state: () => ({
     home_active_movie_index: 0,
@@ -148,6 +150,7 @@ export const MoviesModule = {
         })
         return {
           ...movie,
+          poster: movie?.poster || defaultImageUrl,
           actors,
         }
       })
@@ -189,6 +192,13 @@ export const MoviesModule = {
       if (actors) state.actors = actors
       if (actor_rules) state.actor_rules = actor_rules
     },
+    [MOVIE_TYPES.ADD_ACTOR](state, actor) {
+      state.actors.push(actor)
+    },
+    [MOVIE_TYPES.ADD_ACTOR_RULE](state, rule) {
+      state.actor_rules.push(rule)
+    }
+
   },
   actions: {
     [MOVIE_TYPES.INIT_MOVIES_ACTION]({ commit }) {
@@ -199,5 +209,41 @@ export const MoviesModule = {
       commit(MOVIE_TYPES.DELETE_MOVIE, movieId)
       commit(MOVIE_TYPES.UPDATE_LOCAL_STORAGE)
     },
+    [MOVIE_TYPES.ADD_ACTOR_ACTION]({ commit }, payload) {
+
+      const newActor = {
+        id: new Date().getTime(),
+        ...payload
+      }
+      commit(MOVIE_TYPES.ADD_ACTOR, newActor)
+      commit(MOVIE_TYPES.UPDATE_LOCAL_STORAGE)
+    },
+    [MOVIE_TYPES.ADD_ACTOR_RULE_ACTION]({ commit }, payload) {
+      const newActorRule = {
+        id: new Date().getTime(),
+        ...payload
+      }
+      commit(MOVIE_TYPES.ADD_ACTOR_RULE, newActorRule)
+      commit(MOVIE_TYPES.UPDATE_LOCAL_STORAGE)
+    },
+    [MOVIE_TYPES.CREATE_MOVIE_ACTION]({ commit }, payload) {
+
+      const newMovie = {
+        id: new Date().getTime(),
+        ...payload
+      }
+      commit(MOVIE_TYPES.CREATE_MOVIE, newMovie)
+      commit(MOVIE_TYPES.UPDATE_LOCAL_STORAGE)
+    },
+
+    [MOVIE_TYPES.UPDATE_MOVIE_ACTION]({ commit }, payload) {
+
+      const newMovie = {
+        id: new Date().getTime(),
+        ...payload
+      }
+      commit(MOVIE_TYPES.UPDATE_MOVIE, newMovie)
+      commit(MOVIE_TYPES.UPDATE_LOCAL_STORAGE)
+    }
   },
 }
