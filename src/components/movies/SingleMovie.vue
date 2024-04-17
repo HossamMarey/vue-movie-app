@@ -61,6 +61,21 @@
             />
           </div>
         </div>
+        <div class="my-12 opacity-90">
+          <h2 class="text-xl mb-5">Actors</h2>
+
+          <DataTable
+            :value="actorsData"
+            tableStyle="min-width: 50rem  "
+            class=" "
+            showGridlines
+          >
+            <Column field="name" header="Name"></Column>
+            <Column field="birth_date" header="Birth Date"></Column>
+            <Column field="join_date" header="Join Date"></Column>
+            <Column field="role" header="Role"></Column>
+          </DataTable>
+        </div>
       </div>
     </div>
   </section>
@@ -68,10 +83,13 @@
 
 <script>
 import Button from "primevue/button";
+import DataTable from "primevue/datatable";
+import Column from "primevue/column";
+
 import ConfirmPopup from "primevue/confirmpopup";
 import { RouterLink } from "vue-router";
 import { PhTrash, PhPencilLine } from "@phosphor-icons/vue";
-import { MOVIE_TYPES } from "../../services/store/types";
+import { MOVIE_TYPES } from "@/services/store/types";
 export default {
   components: {
     Button,
@@ -79,8 +97,21 @@ export default {
     PhTrash,
     PhPencilLine,
     ConfirmPopup,
+    DataTable,
+    Column,
   },
   props: { movie: Object },
+  computed: {
+    actorsData() {
+      return this.movie.actors.map((actor) => ({
+        id: actor.actor_id,
+        name: actor.data.name,
+        birth_date: actor.data.birth_date,
+        join_date: actor.join_date,
+        role: actor.role.name,
+      }));
+    },
+  },
   methods: {
     handleDeleteConfirm(event) {
       this.$confirm.require({
